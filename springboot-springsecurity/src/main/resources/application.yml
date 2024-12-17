@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/rbac?characterEncoding=utf-8
+    username: root
+    password: abc123
+  redis:
+    host: 127.0.0.1  # redis服务器地址
+    password:        # redis服务器密码，我这里没有设置密码
+    database: 0      # redis的库，我这里用0号库
+mybatis:
+  mapper-locations: mapper/*.xml       # 映射接口的xml文件
+  type-aliases-package: org.green.entity  # 类型别名
+  configuration:
+    map-underscore-to-camel-case: true # 驼峰命名
