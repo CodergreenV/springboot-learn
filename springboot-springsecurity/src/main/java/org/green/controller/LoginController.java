@@ -10,10 +10,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -29,8 +32,23 @@ public class LoginController {
     @Resource
     private RedisClient redisClient;
 
-    @PostMapping("/login")
-    public ResultVO login(String username, String password) {
+    @GetMapping("/login")
+    public ResultVO login(String username, String password, HttpServletRequest request) {
+        //登录前判断上次登录是否过期
+        String tokenHistory = request.getHeader("token");
+        if(StringUtils.hasText(tokenHistory)) {
+            String claim = JwtUtils.getClaim(tokenHistory);
+            if(StringUtils.hasText(claim)) {
+                //校验是否为同一账户
+                if(Objects.equals(claim, username)) {
+                    //同一账户删除原来登录状态
+                    String key = "login:token:" + tokenHistory;
+                    redisClient.del(key);
+                }
+            }
+        }
+
+        //进行登录认证逻辑
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(username, password);
         try {
             Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);

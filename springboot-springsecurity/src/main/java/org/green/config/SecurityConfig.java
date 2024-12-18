@@ -1,16 +1,21 @@
 package org.green.config;
 
+import org.green.handler.JwtAuthenticationTokenFilter;
+import org.green.handler.LoginUnAccessDeniedHandler;
 import org.green.handler.LoginUnAuthenticationEntryPointHandler;
+import org.green.handler.LogoutStatusSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.annotation.Resource;
 
@@ -19,12 +24,29 @@ import javax.annotation.Resource;
  * @since : 2024/12/17
  */
 @Configuration
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
     /**
      * 登录认证自定义处理器
      */
     @Resource
     private LoginUnAuthenticationEntryPointHandler loginUnAuthenticationEntryPointHandler;
+    /**
+     * 自定义过滤器
+     */
+    @Resource
+    private JwtAuthenticationTokenFilter jwtAuthenticationFilter;
+    /**
+     *  权限不足自定义处理器
+     */
+    @Resource
+    private LoginUnAccessDeniedHandler loginUnAccessDeniedHandler;
+    /**
+     * 注销处理器
+     */
+    @Resource
+    private LogoutStatusSuccessHandler logoutStatusSuccessHandler;
+
     /**
      * 密码加密
      * @return 密码加密类
@@ -53,8 +75,14 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/login").permitAll()
                 .anyRequest().authenticated();
+        //注册自定义过滤器
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         //注册自定义处理器
         http.exceptionHandling().authenticationEntryPoint(loginUnAuthenticationEntryPointHandler);
+        //注册自定义过滤器
+        http.exceptionHandling().accessDeniedHandler(loginUnAccessDeniedHandler);
+        //注册自定义处理器
+        http.logout().logoutSuccessHandler(logoutStatusSuccessHandler);
         return http.build();
     }
 }
