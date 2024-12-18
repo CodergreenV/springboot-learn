@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -42,7 +44,11 @@ public class LoginController {
             String json = JSONUtil.toJsonStr(principal);
             //使用token作为key 过期时间为7天
             String token = JwtUtils.sign(principal.getUsername(), 1000 * 60 * 60 * 24 * 7L);
-            //TODO
+            //用户信息json化保存到redis
+            redisClient.set("login:token:" + token, json,1000*60 * 60 * 24 * 7L);
+            Map<String, Object> map = new HashMap<>();
+            map.put("token", token);
+            return ResultVO.ok(map);
         }catch (AuthenticationException e) {
             //由AbstractUserDetailsAuthenticationProvider 中的 authenticate方法 抛出 BadCredentialsException
             //经历了前面的认证流程，会从UserDetailsService中拿到真正存在数据库中的用户信息，放到userCache
@@ -51,7 +57,5 @@ public class LoginController {
             e.printStackTrace();
             return ResultVO.error("用户名或密码错误");
         }
-
-        return ResultVO.ok();
     }
 }
