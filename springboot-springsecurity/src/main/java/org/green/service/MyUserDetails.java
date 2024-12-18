@@ -1,6 +1,5 @@
 package org.green.service;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.green.entity.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,7 +9,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
